@@ -1,8 +1,10 @@
 ## Welcome to NicTool
 
+- [DNS Record Builder](builder/) - Modern tool to generate RFC-compliant DNS records.
 - [Dictionary](https://nictool.github.io/web/Dictionary) of DNS terms
 - [Discussions](https://github.com/orgs/NicTool/discussions) about NicTool
 - [Wiki](https://github.com/NicTool/web/wiki)
+
 
 The NicTool content starts on the [wiki](https://github.com/NicTool/web/wiki) and some of that content will make its way over here.
 

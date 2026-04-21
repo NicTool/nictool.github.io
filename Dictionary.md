@@ -1,5 +1,7 @@
 # DNS DICTIONARY
 
+- [DNS Record Builder](builder/) - Generate records using these terms.
+
 - **Resource Record**: structured data associated with names / nodes
     - format: owner ttl class type rdata
     - example: www.example.com 3600 IN A 192.0.2.127
