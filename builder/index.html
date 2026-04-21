@@ -1,268 +1,666 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-bs-theme="dark">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NicTool DNS Record Builder</title>
-    <!-- Bootstrap 5 CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        body {
-            background-color: #0d1117;
-            color: #c9d1d9;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
-        }
-        .container {
-            max-width: 800px;
-            margin-top: 50px;
-        }
-        .card {
-            background-color: #161b22;
-            border: 1px solid #30363d;
-            border-radius: 6px;
-        }
-        .card-header {
-            border-bottom: 1px solid #30363d;
-            background-color: #161b22;
-        }
-        .form-control, .form-select {
-            background-color: #0d1117;
-            border: 1px solid #30363d;
-            color: #c9d1d9;
-        }
-        .form-control:focus, .form-select:focus {
-            background-color: #0d1117;
-            border-color: #58a6ff;
-            color: #c9d1d9;
-            box-shadow: 0 0 0 3px rgba(31, 111, 235, 0.3);
-        }
-        .btn-primary {
-            background-color: #238636;
-            border-color: #2ea043;
-        }
-        .btn-primary:hover {
-            background-color: #2ea043;
-            border-color: #3fb950;
-        }
-        .record-preview {
-            background-color: #0d1117;
-            border: 1px solid #30363d;
-            padding: 15px;
-            border-radius: 6px;
-            font-family: SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace;
-            white-space: pre-wrap;
-            word-break: break-all;
-            margin-bottom: 15px;
-        }
-        .copy-btn {
-            background-color: #21262d;
-            border: 1px solid #30363d;
-            color: #c9d1d9;
-        }
-        .copy-btn:hover {
-            background-color: #30363d;
-            border-color: #8b949e;
-        }
-    </style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>DNS Resource Record Builder – NicTool</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
+    integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous" />
+  <style>
+    body { background: #111827; min-height: 100vh; }
+
+    .navbar-brand { letter-spacing: .03em; }
+
+    /* Card tightening */
+    .card { border-color: #2d3748; }
+    .card-header { background: rgba(255,255,255,.04); border-color: #2d3748; }
+
+    /* Monospace output */
+    textarea.mono, input.mono {
+      font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+      font-size: .82rem;
+    }
+
+    /* Field hints */
+    .field-hint { font-size: .72rem; opacity: .55; font-weight: 400; }
+
+    /* Format output blocks */
+    .fmt-label { font-weight: 600; font-size: .85rem; margin-bottom: .3rem; }
+    .fmt-sublabel { font-size: .72rem; opacity: .5; margin-left: .4rem; font-weight: 400; }
+    .fmt-textarea { resize: vertical; min-height: 2.6rem; }
+
+    /* Copy button */
+    .copy-btn { min-width: 4.8rem; font-size: .78rem; transition: all .18s; }
+    .copy-btn.ok { background: var(--bs-success); border-color: var(--bs-success); color: #fff; }
+
+    /* Error area */
+    #rrError { white-space: pre-wrap; font-family: monospace; font-size: .8rem; }
+
+    /* Type selector */
+    #rrType { font-weight: 500; }
+
+    /* Loading overlay */
+    #loadingOverlay {
+      position: fixed; inset: 0; background: rgba(17,24,39,.85);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 9999; transition: opacity .3s;
+    }
+    #loadingOverlay.hidden { opacity: 0; pointer-events: none; }
+
+    /* Rdata field rows */
+    #rrRdataFields .col-rr { margin-bottom: .1rem; }
+
+    /* RFC badge */
+    .rfc-badge {
+      font-size: .7rem; padding: .15rem .45rem;
+      border-radius: 3px; background: rgba(99,179,237,.15);
+      color: #63b3ed; border: 1px solid rgba(99,179,237,.25);
+    }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <header class="mb-4">
-            <h1 class="h2">NicTool DNS Record Builder</h1>
-            <p class="text-secondary">Generate RFC-compliant DNS resource records using <code>@nictool/dns-resource-record</code>.</p>
-        </header>
 
-        <div class="card mb-4">
-            <div class="card-header">
-                <h5 class="mb-0">Record Configuration</h5>
-            </div>
-            <div class="card-body">
-                <form id="recordForm">
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label for="recordName" class="form-label">Record Name</label>
-                            <input type="text" id="recordName" class="form-control" value="example.com." placeholder="example.com.">
-                        </div>
-                        <div class="col-md-3">
-                            <label for="rrType" class="form-label">Type</label>
-                            <select id="rrType" class="form-select">
-                                <option value="" disabled selected>Loading...</option>
-                            </select>
-                        </div>
-                        <div class="col-md-3">
-                            <label for="ttl" class="form-label">TTL</label>
-                            <input type="number" id="ttl" class="form-control" value="3600" min="0">
-                        </div>
-                    </div>
+<!-- Loading overlay -->
+<div id="loadingOverlay">
+  <div class="text-center text-light">
+    <div class="spinner-border mb-3" style="width:2.5rem;height:2.5rem" role="status"></div>
+    <div class="small">Loading dns-resource-record…</div>
+  </div>
+</div>
 
-                    <div id="dynamicFields">
-                        <!-- Fields will be populated here -->
-                    </div>
-                </form>
-            </div>
+<nav class="navbar navbar-expand-sm py-2" data-bs-theme="dark" style="background:#336666">
+  <div class="container-fluid px-4">
+    <a class="navbar-brand fw-bold text-white" href="/">NicTool</a>
+    <span class="navbar-text text-white-50 small">DNS Resource Record Builder</span>
+  </div>
+</nav>
+
+<main class="container-xl py-4 px-3 px-md-4">
+
+  <!-- Page header -->
+  <div class="mb-4">
+    <h1 class="h4 mb-1 fw-bold">DNS Resource Record Builder</h1>
+    <p class="text-muted small mb-0">
+      Generate DNS RRs in <strong>BIND / RFC&nbsp;1035</strong>, <strong>tinydns</strong>,
+      <strong>MaraDNS</strong>, and <strong>wire</strong> formats — powered by
+      <a href="https://github.com/NicTool/dns-resource-record" target="_blank"
+         rel="noopener" class="link-info">@nictool/dns-resource-record</a>.
+    </p>
+  </div>
+
+  <!-- ── Record type selector ───────────────────────────────────────── -->
+  <div class="card mb-3">
+    <div class="card-body py-3">
+      <div class="row g-3 align-items-center">
+        <div class="col-sm-4 col-lg-3">
+          <label for="rrType" class="form-label small text-uppercase text-secondary fw-semibold mb-1">
+            Record Type
+          </label>
+          <select id="rrType" class="form-select">
+            <option value="">Loading…</option>
+          </select>
         </div>
-
-        <div class="card mb-4">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">Record Preview</h5>
-                <button id="copyBtn" class="btn btn-sm btn-outline-secondary copy-btn">Copy to Clipboard</button>
-            </div>
-            <div class="card-body">
-                <div id="recordPreview" class="record-preview">Loading...</div>
-                <div id="outputFormat" class="text-secondary small">Format: Generic / Tinydns</div>
-            </div>
+        <div class="col-sm-8 col-lg-9">
+          <div id="rrDescription" class="fs-5 fw-semibold text-info mb-1">—</div>
+          <div id="rrRfcBadges" class="d-flex flex-wrap gap-1"></div>
         </div>
-
-        <footer class="text-center text-secondary small mt-5">
-            Built with <code>@nictool/dns-resource-record</code> &middot; <a href="/" class="text-secondary text-decoration-underline">Back to NicTool Home</a>
-        </footer>
+      </div>
     </div>
+  </div>
 
-    <!-- Bootstrap 5 JS Bundle -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <!-- ── Record fields ──────────────────────────────────────────────── -->
+  <div class="card mb-3">
+    <div class="card-header py-2 d-flex align-items-center justify-content-between">
+      <span class="fw-semibold small">Record Fields</span>
+      <button id="loadExampleBtn" class="btn btn-sm btn-outline-secondary py-0" style="font-size:.75rem">
+        Load example
+      </button>
+    </div>
+    <div class="card-body pb-3 pt-3">
 
-    <script type="module">
-        import * as dnsRR from 'https://esm.sh/@nictool/dns-resource-record';
+      <!-- Common fields: owner / TTL / class -->
+      <div class="row g-3 mb-3">
+        <div class="col-md-7">
+          <label for="field-owner" class="form-label small fw-semibold mb-1">
+            Owner
+            <span class="field-hint">fully qualified — must end with&nbsp;.</span>
+          </label>
+          <input type="text" id="field-owner" class="form-control form-control-sm mono"
+            placeholder="host.example.com."
+            autocorrect="off" autocapitalize="none" spellcheck="false" />
+        </div>
+        <div class="col-md-3">
+          <label for="field-ttl" class="form-label small fw-semibold mb-1">
+            TTL
+            <span class="field-hint js-ttl-human"></span>
+          </label>
+          <input type="number" id="field-ttl" class="form-control form-control-sm"
+            value="3600" min="0" max="2147483647" />
+        </div>
+        <div class="col-md-2">
+          <label for="field-class" class="form-label small fw-semibold mb-1">Class</label>
+          <select id="field-class" class="form-select form-select-sm">
+            <option value="IN" selected>IN</option>
+            <option value="CH">CH</option>
+            <option value="HS">HS</option>
+          </select>
+        </div>
+      </div>
 
-        const rrTypeSelect = document.getElementById('rrType');
-        const dynamicFields = document.getElementById('dynamicFields');
-        const recordPreview = document.getElementById('recordPreview');
-        const copyBtn = document.getElementById('copyBtn');
-        const form = document.getElementById('recordForm');
+      <!-- Dynamic rdata fields injected here -->
+      <div id="rrRdataFields" class="row g-3"></div>
 
-        const supportedTypes = Object.keys(dnsRR).filter(key => {
-            // Filter classes that are resource record types
-            // Typically these are all uppercase (A, MX, etc.)
-            return /^[A-Z][A-Z0-9]*$/.test(key) && typeof dnsRR[key] === 'function';
-        });
+    </div>
+  </div>
 
-        function init() {
-            rrTypeSelect.innerHTML = supportedTypes.map(type => `<option value="${type}">${type}</option>`).join('');
-            rrTypeSelect.value = supportedTypes.includes('A') ? 'A' : supportedTypes[0];
-            updateFields();
-            updatePreview();
-        }
+  <!-- ── Validation error ───────────────────────────────────────────── -->
+  <div id="rrError" class="alert alert-danger mb-3 d-none py-2" role="alert"></div>
 
-        function updateFields() {
-            const type = rrTypeSelect.value;
-            const RRClass = dnsRR[type];
-            if (!RRClass) return;
+  <!-- ── Output formats ────────────────────────────────────────────── -->
+  <div class="card">
+    <div class="card-header py-2 fw-semibold small">Output Formats</div>
+    <div class="card-body py-3">
+      <div class="row g-4">
 
-            const commonFields = {
-                'A': [{ name: 'address', label: 'IP Address', type: 'text', placeholder: '192.0.2.1' }],
-                'AAAA': [{ name: 'address', label: 'IPv6 Address', type: 'text', placeholder: '2001:db8::1' }],
-                'MX': [
-                    { name: 'preference', label: 'Preference', type: 'number', placeholder: '10' },
-                    { name: 'exchange', label: 'Mail Exchange', type: 'text', placeholder: 'mail.example.com.' }
-                ],
-                'TXT': [{ name: 'data', label: 'Text Data', type: 'text', placeholder: 'v=spf1 ...' }],
-                'CNAME': [{ name: 'cname', label: 'Target', type: 'text', placeholder: 'example.com.' }],
-                'DNAME': [{ name: 'target', label: 'Target', type: 'text', placeholder: 'example.com.' }],
-                'NS': [{ name: 'dname', label: 'Name Server', type: 'text', placeholder: 'ns1.example.com.' }],
-                'PTR': [{ name: 'dname', label: 'Pointer Name', type: 'text', placeholder: 'host.example.com.' }],
-                'SRV': [
-                    { name: 'priority', label: 'Priority', type: 'number', placeholder: '10' },
-                    { name: 'weight', label: 'Weight', type: 'number', placeholder: '10' },
-                    { name: 'port', label: 'Port', type: 'number', placeholder: '53' },
-                    { name: 'target', label: 'Target', type: 'text', placeholder: 'example.com.' }
-                ],
-                'CAA': [
-                    { name: 'flags', label: 'Flags', type: 'number', placeholder: '0' },
-                    { name: 'tag', label: 'Tag', type: 'text', placeholder: 'issue' },
-                    { name: 'value', label: 'Value', type: 'text', placeholder: 'letsencrypt.org' }
-                ],
-                'NAPTR': [
-                    { name: 'order', label: 'Order', type: 'number', placeholder: '100' },
-                    { name: 'preference', label: 'Preference', type: 'number', placeholder: '10' },
-                    { name: 'flags', label: 'Flags', type: 'text', placeholder: 'u' },
-                    { name: 'services', label: 'Services', type: 'text', placeholder: 'sip+E2U' },
-                    { name: 'regexp', label: 'Regexp', type: 'text', placeholder: '!^.*$!sip:user@example.com!' },
-                    { name: 'replacement', label: 'Replacement', type: 'text', placeholder: '.' }
-                ],
-                'SOA': [
-                    { name: 'mname', label: 'Primary NS', type: 'text', placeholder: 'ns1.example.com.' },
-                    { name: 'rname', label: 'Admin Email', type: 'text', placeholder: 'admin.example.com.' },
-                    { name: 'serial', label: 'Serial', type: 'number', placeholder: '2023010101' },
-                    { name: 'refresh', label: 'Refresh', type: 'number', placeholder: '16384' },
-                    { name: 'retry', label: 'Retry', type: 'number', placeholder: '2048' },
-                    { name: 'expire', label: 'Expire', type: 'number', placeholder: '1048576' },
-                    { name: 'minimum', label: 'Minimum TTL', type: 'number', placeholder: '2560' }
-                ],
-                'HINFO': [
-                    { name: 'cpu', label: 'CPU', type: 'text', placeholder: 'PC-Intel' },
-                    { name: 'os', label: 'OS', type: 'text', placeholder: 'Linux' }
-                ],
-                'RP': [
-                    { name: 'mbox', label: 'Mailbox', type: 'text', placeholder: 'admin.example.com.' },
-                    { name: 'txtdname', label: 'TXT Pointer', type: 'text', placeholder: 'admin-info.example.com.' }
-                ]
-            };
+        <!-- BIND / RFC 1035 -->
+        <div class="col-12">
+          <div class="d-flex justify-content-between align-items-center mb-1">
+            <div class="fmt-label">
+              BIND / RFC&nbsp;1035
+              <span class="fmt-sublabel">ISC BIND, PowerDNS, NSD, Knot&hellip;</span>
+            </div>
+            <button class="btn btn-sm btn-outline-secondary copy-btn" data-target="out-bind">Copy</button>
+          </div>
+          <textarea id="out-bind" class="form-control mono fmt-textarea" rows="2" readonly
+            placeholder="Fill in the fields above…"></textarea>
+        </div>
 
-            const fields = commonFields[type] || [{ name: 'rdata', label: 'RData', type: 'text', placeholder: '...' }];
-            
-            dynamicFields.innerHTML = fields.map(field => `
-                <div class="mb-3">
-                    <label for="field_${field.name}" class="form-label">${field.label}</label>
-                    <input type="${field.type}" id="field_${field.name}" name="${field.name}" class="form-control" placeholder="${field.placeholder}" required>
-                </div>
-            `).join('');
+        <!-- tinydns -->
+        <div class="col-12">
+          <div class="d-flex justify-content-between align-items-center mb-1">
+            <div class="fmt-label">
+              tinydns
+              <span class="fmt-sublabel">djbdns / tinydns data file</span>
+            </div>
+            <button class="btn btn-sm btn-outline-secondary copy-btn" data-target="out-tinydns">Copy</button>
+          </div>
+          <textarea id="out-tinydns" class="form-control mono fmt-textarea" rows="2" readonly></textarea>
+        </div>
 
-            // Re-attach listeners
-            dynamicFields.querySelectorAll('input').forEach(input => {
-                input.addEventListener('input', updatePreview);
-            });
-        }
+        <!-- MaraDNS -->
+        <div class="col-12">
+          <div class="d-flex justify-content-between align-items-center mb-1">
+            <div class="fmt-label">
+              MaraDNS
+              <span class="fmt-sublabel">MaraDNS zone file</span>
+            </div>
+            <button class="btn btn-sm btn-outline-secondary copy-btn" data-target="out-maradns">Copy</button>
+          </div>
+          <textarea id="out-maradns" class="form-control mono fmt-textarea" rows="2" readonly></textarea>
+        </div>
 
-        function updatePreview() {
-            const type = rrTypeSelect.value;
-            const owner = document.getElementById('recordName').value || 'example.com.';
-            const ttl = parseInt(document.getElementById('ttl').value) || 3600;
-            const formData = new FormData(form);
-            const data = {};
-            formData.forEach((value, key) => {
-                if (value === '') return;
-                // Try to parse numbers where appropriate
-                if (/^\d+$/.test(value)) {
-                    data[key] = parseInt(value);
-                } else {
-                    data[key] = value;
-                }
-            });
+        <!-- Wire -->
+        <div class="col-12">
+          <div class="d-flex justify-content-between align-items-center mb-1">
+            <div class="fmt-label">
+              Wire
+              <span class="fmt-sublabel">binary wire format, hex encoded</span>
+            </div>
+            <button class="btn btn-sm btn-outline-secondary copy-btn" data-target="out-wire">Copy</button>
+          </div>
+          <textarea id="out-wire" class="form-control mono fmt-textarea" rows="3" readonly></textarea>
+        </div>
 
-            try {
-                const RRClass = dnsRR[type];
-                const rr = new RRClass({
-                    owner: owner,
-                    ttl: ttl,
-                    ...data
-                });
-                recordPreview.innerText = rr.getTinydns();
-                recordPreview.classList.remove('text-danger');
-            } catch (err) {
-                recordPreview.innerText = 'Error: ' + err.message;
-                recordPreview.classList.add('text-danger');
-            }
-        }
+      </div>
+    </div>
+  </div>
 
-        rrTypeSelect.addEventListener('change', () => {
-            updateFields();
-            updatePreview();
-        });
+  <p class="text-muted small mt-4 text-center">
+    Powered by
+    <a href="https://github.com/NicTool/dns-resource-record" target="_blank" rel="noopener"
+       class="link-secondary">@nictool/dns-resource-record</a>
+    &middot;
+    Inspired by
+    <a href="https://andersbrownworth.com/projects/sysadmin/djbdnsRecordBuilder/" target="_blank"
+       rel="noopener" class="link-secondary">andersbrownworth.com</a>
+  </p>
 
-        document.getElementById('ttl').addEventListener('input', updatePreview);
-        document.getElementById('recordName').addEventListener('input', updatePreview);
+</main>
 
-        copyBtn.addEventListener('click', () => {
-            navigator.clipboard.writeText(recordPreview.innerText).then(() => {
-                const originalText = copyBtn.innerText;
-                copyBtn.innerText = 'Copied!';
-                setTimeout(() => {
-                    copyBtn.innerText = originalText;
-                }, 2000);
-            });
-        });
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
+  integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI"
+  crossorigin="anonymous"></script>
 
-        init();
-    </script>
+<script type="module">
+// ─────────────────────────────────────────────────────────────────────────────
+// 1. Polyfill Buffer for browser, then dynamically import dns-resource-record.
+//    tinydns.js uses Buffer for UInt16/32 encoding, so we need it before any
+//    RR class method that calls toTinydns() or toWire() on complex record types.
+// ─────────────────────────────────────────────────────────────────────────────
+import { Buffer } from 'https://esm.sh/buffer@6.0.3'
+globalThis.Buffer = Buffer
+
+const RR = await import('https://esm.sh/@nictool/dns-resource-record@1.6.1')
+
+// esm.sh minifies class names (e.g. class A → class a), which breaks the
+// constructor.name check inside setType(). Patch it to skip that check —
+// the type string still gets stored correctly as t.toUpperCase().
+RR.default.prototype.setType = function (t) {
+  if (t === '' || t == null) this.throwHelp('type is required')
+  this.set('type', t.toUpperCase())
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 2. Constants
+// ─────────────────────────────────────────────────────────────────────────────
+const TAG_TO_GROUP = {
+  common:     'Common',
+  security:   'Security',
+  dnssec:     'DNSSEC',
+  deprecated: 'Deprecated',
+  obsolete:   'Obsolete',
+}
+const GROUP_ORDER = ['Common', 'Less Common', 'Security', 'DNSSEC', 'Deprecated', 'Obsolete']
+
+// Fields that get a <textarea> instead of a single-line <input>
+const LARGE_FIELDS = new Set([
+  'data', 'certificate association data', 'fingerprint', 'public key',
+  'key tag', 'public key', 'digest', 'hit', 'public key', 'rendezvous servers',
+  'signature', 'key data', 'next domain name', 'type bit maps',
+])
+
+// Fields that are FQDN domain names (hint about trailing dot)
+const FQDN_FIELDS = new Set([
+  'exchange', 'target', 'nsdname', 'dname', 'cname', 'mname', 'rname',
+  'replacement', 'signer name', 'next',
+])
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 3. Helpers
+// ─────────────────────────────────────────────────────────────────────────────
+function ucFirst(str) {
+  return str.split(/\s+/).map(w => w.charAt(0).toUpperCase() + w.slice(1)).join('')
+}
+
+function titleCase(str) {
+  return str.split(/\s+/).map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
+}
+
+function htmlEsc(s) {
+  return String(s ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+}
+
+function humanTtl(secs) {
+  if (!secs && secs !== 0) return ''
+  if (secs < 60) return `${secs}s`
+  if (secs < 3600) return `${secs / 60}m`
+  if (secs % 3600 === 0 && secs < 86400) return `${secs / 3600}h`
+  if (secs % 86400 === 0 && secs < 604800) return `${secs / 86400}d`
+  if (secs % 604800 === 0) return `${secs / 604800}w`
+  const h = Math.floor(secs / 3600)
+  const m = Math.floor((secs % 3600) / 60)
+  return h ? `${h}h ${m}m` : `${m}m`
+}
+
+function getGroupForInstance(inst) {
+  const tags = inst.getTags?.() ?? []
+  for (const [tag, group] of Object.entries(TAG_TO_GROUP)) {
+    if (tags.includes(tag)) return group
+  }
+  return 'Less Common'
+}
+
+// Collect all exported RR classes (skip 'default' base class and 'typeMap')
+const SKIP = new Set(['default', 'typeMap'])
+const ALL_TYPES = {}
+for (const [name, val] of Object.entries(RR)) {
+  if (!SKIP.has(name) && typeof val === 'function') {
+    ALL_TYPES[name] = val
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 4. Build the <select> type selector grouped by category
+// ─────────────────────────────────────────────────────────────────────────────
+function buildTypeSelector() {
+  const grouped = {}
+  for (const name of GROUP_ORDER) grouped[name] = []
+
+  for (const [name, cls] of Object.entries(ALL_TYPES)) {
+    try {
+      const inst = new cls(null)
+      grouped[getGroupForInstance(inst)].push(name)
+    } catch { /* skip broken entries */ }
+  }
+
+  const sel = document.getElementById('rrType')
+  sel.innerHTML = ''
+
+  for (const groupName of GROUP_ORDER) {
+    const names = (grouped[groupName] ?? []).sort()
+    if (!names.length) continue
+    const og = document.createElement('optgroup')
+    og.label = groupName
+    for (const name of names) {
+      const opt = document.createElement('option')
+      opt.value = name
+      opt.textContent = name
+      og.appendChild(opt)
+    }
+    sel.appendChild(og)
+  }
+
+  sel.value = 'A'
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 5. Render rdata field inputs for the chosen type
+// ─────────────────────────────────────────────────────────────────────────────
+function renderRdataFields(typeName) {
+  const cls = ALL_TYPES[typeName]
+  if (!cls) return
+
+  const inst       = new cls(null)
+  const canonical  = inst.getCanonical?.() ?? {}
+  const rdataFlds  = inst.getRdataFields?.() ?? []
+
+  // Update description
+  document.getElementById('rrDescription').textContent = inst.getDescription?.() || typeName
+
+  // RFC badges
+  const badgesEl = document.getElementById('rrRfcBadges')
+  badgesEl.innerHTML = ''
+  for (const rfc of (inst.getRFCs?.() ?? [])) {
+    const a = document.createElement('a')
+    a.href = `https://www.rfc-editor.org/rfc/rfc${rfc}`
+    a.target = '_blank'; a.rel = 'noopener'
+    a.className = 'rfc-badge text-decoration-none'
+    a.textContent = `RFC ${rfc}`
+    badgesEl.appendChild(a)
+  }
+
+  // Set canonical owner/ttl defaults (only when switching type)
+  if (canonical.owner) document.getElementById('field-owner').value = canonical.owner
+  if (canonical.ttl)   document.getElementById('field-ttl').value   = canonical.ttl
+
+  // Build dynamic rdata field elements
+  const container = document.getElementById('rrRdataFields')
+  container.innerHTML = ''
+
+  for (const fieldName of rdataFlds) {
+    const optionsMethod = `get${ucFirst(fieldName)}Options`
+    const options       = typeof inst[optionsMethod] === 'function' ? inst[optionsMethod]() : null
+    const canonVal      = canonical[fieldName]
+    const isNumeric     = typeof canonVal === 'number'
+    const safeId        = `rdf-${fieldName.replace(/\s+/g, '-')}`
+    const labelText     = titleCase(fieldName)
+    const isFqdn        = FQDN_FIELDS.has(fieldName)
+    const isLarge       = LARGE_FIELDS.has(fieldName)
+
+    const col = document.createElement('div')
+
+    if (options) {
+      // ── Select (enumerated options) ──────────────────────────────────
+      const firstKey    = options.keys().next().value
+      const keysNumeric = typeof firstKey === 'number'
+      col.className     = 'col-md-6'
+
+      const optionsHtml = [...options.entries()].map(([k, v]) => {
+        const display = v != null ? `${k} – ${v}` : (k === '' ? '(empty)' : String(k))
+        const sel     = String(k) === String(canonVal) ? ' selected' : ''
+        return `<option value="${htmlEsc(k)}"${sel}>${htmlEsc(display)}</option>`
+      }).join('')
+
+      col.innerHTML = `
+        <label for="${safeId}" class="form-label small fw-semibold mb-1">${htmlEsc(labelText)}</label>
+        <select id="${safeId}" data-field="${htmlEsc(fieldName)}"
+          data-numeric="${keysNumeric}" class="form-select form-select-sm rr-field">
+          ${optionsHtml}
+        </select>`
+
+    } else if (isLarge) {
+      // ── Textarea (long text fields) ──────────────────────────────────
+      col.className = 'col-12'
+      col.innerHTML = `
+        <label for="${safeId}" class="form-label small fw-semibold mb-1">${htmlEsc(labelText)}</label>
+        <textarea id="${safeId}" data-field="${htmlEsc(fieldName)}"
+          class="form-control form-control-sm mono rr-field fmt-textarea"
+          rows="3" autocorrect="off" autocapitalize="none"
+          spellcheck="false"></textarea>`
+      // Set value via DOM to avoid HTML encoding issues
+      col.querySelector('textarea').value = String(canonVal ?? '')
+
+    } else if (isNumeric) {
+      // ── Number input ─────────────────────────────────────────────────
+      col.className = 'col-md-4 col-sm-6'
+      col.innerHTML = `
+        <label for="${safeId}" class="form-label small fw-semibold mb-1">${htmlEsc(labelText)}</label>
+        <input type="number" id="${safeId}" data-field="${htmlEsc(fieldName)}"
+          data-numeric="true" class="form-control form-control-sm rr-field"
+          value="${canonVal ?? 0}" min="0" />`
+
+    } else {
+      // ── Text input ───────────────────────────────────────────────────
+      col.className = 'col-md-6'
+      const hint    = isFqdn ? '<span class="field-hint ms-1">FQDN, ends with&nbsp;.</span>' : ''
+      col.innerHTML = `
+        <label for="${safeId}" class="form-label small fw-semibold mb-1">${htmlEsc(labelText)}${hint}</label>
+        <input type="text" id="${safeId}" data-field="${htmlEsc(fieldName)}"
+          class="form-control form-control-sm mono rr-field"
+          autocorrect="off" autocapitalize="none" spellcheck="false" />`
+      col.querySelector('input').value = String(canonVal ?? '')
+    }
+
+    container.appendChild(col)
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 6. Collect form values → build RR → render all output formats
+// ─────────────────────────────────────────────────────────────────────────────
+function updateOutput() {
+  const typeName = document.getElementById('rrType').value
+  if (!typeName) return
+
+  const cls = ALL_TYPES[typeName]
+  if (!cls) return
+
+  const errorEl = document.getElementById('rrError')
+
+  // Collect common fields
+  const opts = {
+    owner : document.getElementById('field-owner').value.trim(),
+    ttl   : parseInt(document.getElementById('field-ttl').value, 10) || 3600,
+    class : document.getElementById('field-class').value,
+    type  : typeName,
+  }
+
+  // Collect rdata fields
+  for (const el of document.querySelectorAll('.rr-field')) {
+    const field = el.dataset.field
+    if (!field) continue
+    if (el.dataset.numeric === 'true') {
+      opts[field] = parseInt(el.value, 10)
+      if (isNaN(opts[field])) opts[field] = 0
+    } else {
+      opts[field] = el.tagName === 'TEXTAREA' ? el.value : el.value
+    }
+  }
+
+  try {
+    const rr = new cls(opts)
+
+    setOut('out-bind',    tryCall(() => rr.toBind?.().trim()))
+    setOut('out-tinydns', tryCall(() => rr.toTinydns?.().trim()))
+    setOut('out-maradns', tryCall(() => rr.toMaraDNS?.().trim()))
+
+    // Wire: toWire() returns a Buffer; display as spaced hex
+    setOut('out-wire', tryCall(() => {
+      const bytes = rr.toWire()
+      const hex   = Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join(' ')
+      return `${hex}\n; ${bytes.length} bytes`
+    }))
+
+    errorEl.classList.add('d-none')
+    errorEl.textContent = ''
+  } catch (e) {
+    errorEl.textContent = e.message
+    errorEl.classList.remove('d-none')
+    for (const id of ['out-bind', 'out-tinydns', 'out-maradns', 'out-wire']) {
+      document.getElementById(id).value = ''
+    }
+  }
+}
+
+function setOut(id, value) {
+  const el = document.getElementById(id)
+  if (el) el.value = value ?? ''
+}
+
+function tryCall(fn) {
+  try {
+    return fn()
+  } catch (e) {
+    return `; Error: ${e.message}`
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 7. Load example values from getCanonical()
+// ─────────────────────────────────────────────────────────────────────────────
+function loadExample() {
+  const typeName = document.getElementById('rrType').value
+  const cls = ALL_TYPES[typeName]
+  if (!cls) return
+
+  const inst      = new cls(null)
+  const canonical = inst.getCanonical?.() ?? {}
+
+  if (canonical.owner) document.getElementById('field-owner').value = canonical.owner
+  if (canonical.ttl)   document.getElementById('field-ttl').value   = canonical.ttl
+
+  for (const el of document.querySelectorAll('.rr-field')) {
+    const field = el.dataset.field
+    if (field === undefined || !(field in canonical)) continue
+    if (el.tagName === 'SELECT') {
+      el.value = String(canonical[field])
+    } else {
+      el.value = String(canonical[field] ?? '')
+    }
+  }
+
+  updateTtlDisplay()
+  updateOutput()
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 8. Copy-to-clipboard buttons
+// ─────────────────────────────────────────────────────────────────────────────
+function setupCopyButtons() {
+  document.querySelectorAll('.copy-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const ta = document.getElementById(btn.dataset.target)
+      if (!ta?.value) return
+
+      const reset = () => {
+        btn.textContent = 'Copy'
+        btn.classList.remove('ok', 'btn-success')
+        btn.classList.add('btn-outline-secondary')
+      }
+
+      const markCopied = () => {
+        btn.textContent = '✓ Copied'
+        btn.classList.add('ok', 'btn-success')
+        btn.classList.remove('btn-outline-secondary')
+        setTimeout(reset, 1800)
+      }
+
+      if (navigator.clipboard?.writeText) {
+        navigator.clipboard.writeText(ta.value).then(markCopied).catch(() => {
+          ta.select(); document.execCommand('copy'); markCopied()
+        })
+      } else {
+        ta.select(); document.execCommand('copy'); markCopied()
+      }
+    })
+  })
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 9. TTL human-readable display
+// ─────────────────────────────────────────────────────────────────────────────
+function updateTtlDisplay() {
+  const ttl = parseInt(document.getElementById('field-ttl').value, 10)
+  for (const s of document.querySelectorAll('.js-ttl-human')) {
+    s.textContent = isNaN(ttl) ? '' : `(${humanTtl(ttl)})`
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 10. Wire up all events
+// ─────────────────────────────────────────────────────────────────────────────
+function attachEvents() {
+  document.getElementById('rrType').addEventListener('change', e => {
+    renderRdataFields(e.target.value)
+    updateTtlDisplay()
+    updateOutput()
+  })
+
+  document.getElementById('field-owner').addEventListener('input', updateOutput)
+  document.getElementById('field-ttl').addEventListener('input', () => {
+    updateTtlDisplay(); updateOutput()
+  })
+  document.getElementById('field-class').addEventListener('change', updateOutput)
+
+  // FQDN auto-dot on blur for owner
+  document.getElementById('field-owner').addEventListener('blur', e => {
+    const v = e.target.value.trim()
+    if (v && !v.endsWith('.')) {
+      e.target.value = v + '.'
+      updateOutput()
+    }
+  })
+
+  // Delegate rdata field changes
+  const rdataContainer = document.getElementById('rrRdataFields')
+  rdataContainer.addEventListener('input',  updateOutput)
+  rdataContainer.addEventListener('change', updateOutput)
+
+  // Auto-dot for FQDN rdata fields on blur
+  rdataContainer.addEventListener('focusout', e => {
+    const el = e.target
+    if (!el.classList.contains('rr-field')) return
+    if (el.type !== 'text') return
+    if (!FQDN_FIELDS.has(el.dataset.field)) return
+    const v = el.value.trim()
+    if (v && !v.endsWith('.')) {
+      el.value = v + '.'
+      updateOutput()
+    }
+  })
+
+  document.getElementById('loadExampleBtn').addEventListener('click', loadExample)
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 11. Init
+// ─────────────────────────────────────────────────────────────────────────────
+buildTypeSelector()
+attachEvents()
+setupCopyButtons()
+renderRdataFields('A')
+updateTtlDisplay()
+updateOutput()
+
+// Hide loading overlay
+const overlay = document.getElementById('loadingOverlay')
+overlay.classList.add('hidden')
+setTimeout(() => overlay.remove(), 350)
+</script>
+
 </body>
 </html>
