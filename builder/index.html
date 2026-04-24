@@ -6,14 +6,8 @@
   <title>DNS Resource Record Builder – NicTool</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
     integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous" />
+  <link rel="stylesheet" href="../css/nictool.css" />
   <style>
-    body { background: #111827; min-height: 100vh; }
-
-    .navbar-brand { letter-spacing: .03em; }
-
-    /* Card tightening */
-    .card { border-color: #2d3748; }
-    .card-header { background: rgba(255,255,255,.04); border-color: #2d3748; }
 
     /* Monospace output */
     textarea.mono, input.mono {
@@ -68,10 +62,28 @@
   </div>
 </div>
 
-<nav class="navbar navbar-expand-sm py-2" data-bs-theme="dark" style="background:#336666">
-  <div class="container-fluid px-4">
-    <a class="navbar-brand fw-bold text-white" href="/">NicTool</a>
-    <span class="navbar-text text-white-50 small">DNS Resource Record Builder</span>
+<nav class="navbar navbar-expand-sm py-2 nt-navbar">
+  <div class="container px-4">
+    <a class="navbar-brand" href="../index.html">NicTool</a>
+    <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navMain">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navMain">
+      <ul class="navbar-nav ms-auto gap-1">
+        <li class="nav-item">
+          <a class="nav-link" href="../index.html">Home</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link active" href="index.html">Builder</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="../dictionary.html">Dictionary</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="https://github.com/orgs/NicTool/discussions" target="_blank" rel="noopener">Discussions</a>
+        </li>
+      </ul>
+    </div>
   </div>
 </nav>
 
@@ -167,7 +179,7 @@
           <div class="d-flex justify-content-between align-items-center mb-1">
             <div class="fmt-label">
               BIND / RFC&nbsp;1035
-              <span class="fmt-sublabel">ISC BIND, PowerDNS, NSD, Knot&hellip;</span>
+              <span class="fmt-sublabel">ISC BIND, Knot, NSD, PowerDNS&hellip;</span>
             </div>
             <button class="btn btn-sm btn-outline-secondary copy-btn" data-target="out-bind">Copy</button>
           </div>
@@ -233,22 +245,10 @@
 
 <script type="module">
 // ─────────────────────────────────────────────────────────────────────────────
-// 1. Polyfill Buffer for browser, then dynamically import dns-resource-record.
-//    tinydns.js uses Buffer for UInt16/32 encoding, so we need it before any
-//    RR class method that calls toTinydns() or toWire() on complex record types.
+// 1. Import dns-resource-record. v1.7.0+ uses Uint8Array/DataView natively —
+//    no Buffer polyfill needed.
 // ─────────────────────────────────────────────────────────────────────────────
-import { Buffer } from 'https://esm.sh/buffer@6.0.3'
-globalThis.Buffer = Buffer
-
-const RR = await import('https://esm.sh/@nictool/dns-resource-record@1.6.1')
-
-// esm.sh minifies class names (e.g. class A → class a), which breaks the
-// constructor.name check inside setType(). Patch it to skip that check —
-// the type string still gets stored correctly as t.toUpperCase().
-RR.default.prototype.setType = function (t) {
-  if (t === '' || t == null) this.throwHelp('type is required')
-  this.set('type', t.toUpperCase())
-}
+const RR = await import('https://cdn.jsdelivr.net/npm/@nictool/dns-resource-record@1.7.0/dist/dns-rr.min.js')
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 2. Constants

@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>NicTool – DNS Management</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
+    integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous" />
+  <link rel="stylesheet" href="css/nictool.css" />
+</head>
+<body>
+
+<nav class="navbar navbar-expand-sm py-2 nt-navbar">
+  <div class="container px-4">
+    <a class="navbar-brand" href="index.html">NicTool</a>
+    <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navMain">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navMain">
+      <ul class="navbar-nav ms-auto gap-1">
+        <li class="nav-item">
+          <a class="nav-link active" href="index.html">Home</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="builder/index.html">Builder</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="dictionary.html">Dictionary</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="https://github.com/orgs/NicTool/discussions" target="_blank" rel="noopener">Discussions</a>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<main>
+
+  <!-- Hero -->
+  <section class="nt-hero">
+    <div class="container px-4">
+      <div class="row align-items-center">
+        <div class="col-lg-8">
+          <p class="nt-section-label">Open Source DNS Management</p>
+          <h1>Welcome to NicTool</h1>
+          <p class="lead mt-3 mb-4">
+            A suite of open-source tools for managing DNS zones, resource records,
+            and nameserver configurations — from the browser to the command line.
+          </p>
+          <div class="d-flex flex-wrap gap-2">
+            <a href="builder/index.html" class="btn btn-sm px-4 py-2 fw-semibold"
+               style="background:var(--nt-primary);color:#fff;border:none">
+              Open DNS Builder
+            </a>
+            <a href="https://github.com/NicTool" target="_blank" rel="noopener"
+               class="btn btn-sm btn-outline-secondary px-4 py-2">
+              GitHub
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Feature cards -->
+  <section class="pb-5">
+    <div class="container px-4">
+      <p class="nt-section-label">Resources</p>
+      <div class="row g-3">
+
+        <div class="col-sm-6 col-lg-3">
+          <a href="builder/index.html" class="nt-feature-card">
+            <span class="nt-icon">🔧</span>
+            <h3>DNS Record Builder</h3>
+            <p>Generate RFC-compliant DNS records in BIND, tinydns, MaraDNS, and wire formats — live in the browser.</p>
+          </a>
+        </div>
+
+        <div class="col-sm-6 col-lg-3">
+          <a href="dictionary.html" class="nt-feature-card">
+            <span class="nt-icon">📖</span>
+            <h3>DNS Dictionary</h3>
+            <p>Plain-language definitions for DNS terminology — resource records, owners, labels, TTL, rdata, and more.</p>
+          </a>
+        </div>
+
+        <div class="col-sm-6 col-lg-3">
+          <a href="https://github.com/orgs/NicTool/discussions" target="_blank" rel="noopener" class="nt-feature-card">
+            <span class="nt-icon">💬</span>
+            <h3>Discussions</h3>
+            <p>Ask questions, share feedback, and connect with the NicTool community on GitHub Discussions.</p>
+          </a>
+        </div>
+
+        <div class="col-sm-6 col-lg-3">
+          <a href="https://github.com/NicTool/web/wiki" target="_blank" rel="noopener" class="nt-feature-card">
+            <span class="nt-icon">📚</span>
+            <h3>Wiki</h3>
+            <p>In-depth documentation for the NicTool stack — installation, configuration, and API reference.</p>
+          </a>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- About -->
+  <section class="pb-5">
+    <div class="container px-4">
+      <div class="card">
+        <div class="card-body py-4 px-4">
+          <p class="nt-section-label mb-3">About</p>
+          <p class="mb-2" style="font-size:.93rem;color:var(--nt-muted)">
+            NicTool is a collection of open-source packages for DNS management. The
+            <a href="https://github.com/NicTool/dns-resource-record" target="_blank" rel="noopener">dns-resource-record</a>
+            library handles RFC-compliant record parsing and conversion.
+            <a href="https://github.com/NicTool/dns-zone" target="_blank" rel="noopener">dns-zone</a>
+            handles zone import and export.
+            Deeper content lives on the
+            <a href="https://github.com/NicTool/web/wiki" target="_blank" rel="noopener">wiki</a>
+            and will continue to move here over time.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="nt-footer">
+  <div class="container px-4">
+    <span>NicTool &mdash; open-source DNS management</span>
+    &middot;
+    <a href="https://github.com/NicTool" target="_blank" rel="noopener">GitHub</a>
+    &middot;
+    <a href="https://github.com/NicTool/web/wiki" target="_blank" rel="noopener">Wiki</a>
+    &middot;
+    <a href="https://github.com/orgs/NicTool/discussions" target="_blank" rel="noopener">Discussions</a>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
+  integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI"
+  crossorigin="anonymous"></script>
+</body>
+</html>

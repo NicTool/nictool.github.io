@@ -1,0 +1,215 @@
+/* NicTool shared styles
+ * Brand color: #336666 (teal)
+ * Theme: dark navy, not black
+ */
+
+:root {
+  --nt-bg:           #141d2b;
+  --nt-surface:      #1a2537;
+  --nt-surface-2:    #1f2d42;
+  --nt-border:       #2a3a52;
+  --nt-primary:      #336666;
+  --nt-primary-hov:  #3d7a7a;
+  --nt-primary-lt:   #4d9999;
+  --nt-accent:       #63b3ed;
+  --nt-text:         #dce6f0;
+  --nt-muted:        #7a92ab;
+  --nt-success:      #48bb78;
+}
+
+/* ── Base ───────────────────────────────────────────────── */
+body {
+  background: var(--nt-bg);
+  color: var(--nt-text);
+  min-height: 100vh;
+}
+
+a {
+  color: var(--nt-primary-lt);
+}
+
+a:hover {
+  color: var(--nt-accent);
+}
+
+/* ── Navbar ─────────────────────────────────────────────── */
+.nt-navbar {
+  background: var(--nt-primary) !important;
+}
+
+.nt-navbar .navbar-brand {
+  color: #fff !important;
+  font-weight: 700;
+  letter-spacing: .03em;
+}
+
+.nt-navbar .navbar-brand:hover {
+  opacity: .85;
+}
+
+.nt-navbar .nav-link {
+  color: rgba(255,255,255,.8) !important;
+}
+
+.nt-navbar .nav-link:hover,
+.nt-navbar .nav-link.active {
+  color: #fff !important;
+}
+
+.nt-navbar .navbar-text {
+  color: rgba(255,255,255,.6);
+}
+
+/* ── Cards ──────────────────────────────────────────────── */
+.card {
+  background: var(--nt-surface);
+  border-color: var(--nt-border);
+}
+
+.card-header {
+  background: rgba(255,255,255,.04);
+  border-color: var(--nt-border);
+}
+
+/* ── Feature cards (index page) ─────────────────────────── */
+.nt-feature-card {
+  background: var(--nt-surface);
+  border: 1px solid var(--nt-border);
+  border-radius: .5rem;
+  padding: 1.75rem 1.5rem;
+  transition: border-color .2s, transform .2s;
+  text-decoration: none;
+  color: var(--nt-text);
+  display: block;
+  height: 100%;
+}
+
+.nt-feature-card:hover {
+  border-color: var(--nt-primary-lt);
+  transform: translateY(-2px);
+  color: var(--nt-text);
+  text-decoration: none;
+}
+
+.nt-feature-card .nt-icon {
+  font-size: 2rem;
+  margin-bottom: .75rem;
+  display: block;
+}
+
+.nt-feature-card h3 {
+  font-size: 1.05rem;
+  font-weight: 600;
+  margin-bottom: .4rem;
+  color: var(--nt-primary-lt);
+}
+
+.nt-feature-card p {
+  font-size: .88rem;
+  color: var(--nt-muted);
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* ── Hero ───────────────────────────────────────────────── */
+.nt-hero {
+  padding: 3.5rem 0 2.5rem;
+}
+
+.nt-hero h1 {
+  font-size: clamp(1.8rem, 4vw, 2.6rem);
+  font-weight: 700;
+  color: #fff;
+}
+
+.nt-hero .lead {
+  color: var(--nt-muted);
+  font-size: 1.05rem;
+}
+
+.nt-brand-pill {
+  display: inline-block;
+  background: var(--nt-primary);
+  color: #fff;
+  font-size: .7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  padding: .15rem .55rem;
+  border-radius: 99px;
+  vertical-align: middle;
+  margin-left: .4rem;
+}
+
+/* ── Dictionary / glossary ──────────────────────────────── */
+.nt-term {
+  padding: 1.25rem 0;
+  border-bottom: 1px solid var(--nt-border);
+}
+
+.nt-term:last-child {
+  border-bottom: none;
+}
+
+.nt-term dt {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--nt-primary-lt);
+  margin-bottom: .35rem;
+}
+
+.nt-term dd {
+  color: var(--nt-text);
+  font-size: .9rem;
+  line-height: 1.65;
+  margin: 0 0 .25rem 0;
+}
+
+.nt-term dd.nt-sub {
+  color: var(--nt-muted);
+  font-size: .84rem;
+  padding-left: 1rem;
+}
+
+.nt-term code {
+  background: var(--nt-surface-2);
+  border: 1px solid var(--nt-border);
+  border-radius: 3px;
+  padding: .1em .35em;
+  font-size: .82em;
+  color: var(--nt-accent);
+}
+
+/* ── Section heading ────────────────────────────────────── */
+.nt-section-label {
+  font-size: .7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  color: var(--nt-muted);
+  margin-bottom: 1.25rem;
+}
+
+/* ── Footer ─────────────────────────────────────────────── */
+.nt-footer {
+  border-top: 1px solid var(--nt-border);
+  padding: 1.5rem 0;
+  margin-top: 3rem;
+  text-align: center;
+  font-size: .82rem;
+  color: var(--nt-muted);
+}
+
+.nt-footer a {
+  color: var(--nt-muted);
+}
+
+.nt-footer a:hover {
+  color: var(--nt-primary-lt);
+}
+
+/* ── Utility ────────────────────────────────────────────── */
+.text-nt-muted   { color: var(--nt-muted) !important; }
+.text-nt-primary { color: var(--nt-primary-lt) !important; }
+.border-nt       { border-color: var(--nt-border) !important; }
+.bg-nt-surface   { background: var(--nt-surface) !important; }
